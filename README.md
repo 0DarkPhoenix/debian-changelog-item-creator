@@ -1,65 +1,42 @@
-# debian-changelog-item-creator README
+# Debian Changelog Item Creator
 
-This is the README for your extension "debian-changelog-item-creator". After writing up a brief description, we recommend including the following sections.
+## Overview
+
+The "Debian Changelog Item Creator" extension for Visual Studio Code helps you easily create and manage changelog entries for Debian packages. This extension streamlines the process of adding new changelog items, ensuring they are formatted correctly and include necessary metadata such as version, urgency, and author details.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Automatic Changelog Entry Creation**: Quickly add new changelog entries with the correct format.
+- **User Configuration**: Set and save your name and email for use in changelog entries.
+- **Date Formatting**: Automatically formats the date in the required Debian changelog format.
+- **Version Bumping**: Automatically increments the version number for new changelog entries.
 
-For example if there is an image subfolder under your extension project workspace:
+## Usage
 
-\!\[feature X\]\(images/feature-x.png\)
+1. **Set User Information**:
+    - Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and run `Debian Changelog Item Creator: Edit User Name` to set your name.
+    - Run `Debian Changelog Item Creator: Edit Email Address` to set your email address.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+2. **Create a New Changelog Entry**:
+    - Place your cursor in the changelog file where you want to add a new entry.
+    - Use the command palette to run `Debian Changelog Item Creator: New Changelog Item`.
+    - The extension will automatically insert a new changelog entry with the incremented version number, current date, and your configured name and email.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
--   `myExtension.enable`: Enable/disable this extension.
--   `myExtension.thing`: Set to `blah` to do something.
+- `debian-changelog-item-creator.userName`: Your name to be used in changelog entries.
+- `debian-changelog-item-creator.emailAddress`: Your email address to be used in changelog entries.
+
+## Commands
+
+This extension contributes the following commands:
+
+- `debian-changelog-item-creator.editUserName`: Prompts you to enter and save your name.
+- `debian-changelog-item-creator.editEmailAddress`: Prompts you to enter and save your email address.
+- `debian-changelog-item-creator.newChangelogItem`: Creates a new changelog entry at the current cursor position.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
--   Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
--   Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
--   Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
--   [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
--   [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Ensure your cursor is placed correctly within the changelog file before running the `newChangelogItem` command to avoid errors.
