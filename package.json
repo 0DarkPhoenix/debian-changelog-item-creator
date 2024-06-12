@@ -19,8 +19,8 @@
                 "title": "Debian Changelog Item Creator: Edit Email Address"
             },
             {
-                "command": "debian-changelog-item-creator.editUserName",
-                "title": "Debian Changelog Item Creator: Edit User Name"
+                "command": "debian-changelog-item-creator.editName",
+                "title": "Debian Changelog Item Creator: Edit Name"
             }
         ],
         "configuration": {
@@ -32,10 +32,10 @@
                     "default": "",
                     "description": "The email address to use in changelogs."
                 },
-                "debian-changelog-item-creator.userName": {
+                "debian-changelog-item-creator.name": {
                     "type": "string",
                     "default": "",
-                    "description": "The user name to use in changelogs."
+                    "description": "The name to use in changelogs."
                 }
             }
         },

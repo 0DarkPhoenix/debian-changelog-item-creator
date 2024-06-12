@@ -11,8 +11,8 @@ function activate(context) {
         }
     );
 
-    let editUserName = vscode.commands.registerCommand(
-        "debian-changelog-item-creator.editUserName",
+    let editName = vscode.commands.registerCommand(
+        "debian-changelog-item-creator.editName",
         async function () {
             await promptForName();
         }
@@ -24,7 +24,7 @@ function activate(context) {
             const config = vscode.workspace.getConfiguration(
                 "debian-changelog-item-creator"
             );
-            let name = config.get("userName");
+            let name = config.get("name");
             let email = config.get("emailAddress");
 
             if (!name) {
@@ -54,8 +54,37 @@ function activate(context) {
 
                 const { title, version } = parseChangelogLine(changelogLine);
                 const newVersion = bumpVersion(version);
-                const changelogMessage =
-                    "Debian Changelog Item Creator: Automatically added a new changelog item!";
+                let changelogMessage = "";
+
+                // Check if there is selected text
+                const selection = editor.selection;
+                if (!selection.isEmpty) {
+                    changelogMessage = editor.document.getText(selection);
+                    // Remove the selected text
+                    await editor.edit((editBuilder) => {
+                        editBuilder.delete(selection);
+                    });
+                } else {
+                    // Check if the cursor is at the end of a line with text
+                    const cursorPosition = editor.selection.active;
+                    const lineText = editor.document.lineAt(
+                        cursorPosition.line
+                    ).text;
+                    if (cursorPosition.character === lineText.length) {
+                        changelogMessage = lineText.trim();
+                        // Remove the line text
+                        await editor.edit((editBuilder) => {
+                            editBuilder.delete(
+                                new vscode.Range(
+                                    cursorPosition.line,
+                                    0,
+                                    cursorPosition.line,
+                                    lineText.length
+                                )
+                            );
+                        });
+                    }
+                }
 
                 // Function to format the date string in the desired format
                 const formatDate = (date) => {
@@ -99,9 +128,27 @@ function activate(context) {
 
                 const template = `${title} (${newVersion}) stable; urgency=low\n\n\t* Release ${newVersion}\n\n\t- ${changelogMessage}\n\n\t-- ${name} <${email}> ${formattedDate}`;
 
-                editor.edit((editBuilder) => {
-                    editBuilder.insert(editor.selection.active, template);
-                });
+                editor
+                    .edit((editBuilder) => {
+                        editBuilder.insert(editor.selection.active, template);
+                    })
+                    .then(() => {
+                        if (!changelogMessage) {
+                            // Place the cursor at the position of changelogMessage
+                            const position = editor.selection.active;
+                            const newPosition = position.with(
+                                position.line - 2,
+                                4
+                            );
+                            editor.selection = new vscode.Selection(
+                                newPosition,
+                                newPosition
+                            );
+                            editor.revealRange(
+                                new vscode.Range(newPosition, newPosition)
+                            );
+                        }
+                    });
             } else {
                 vscode.window.showErrorMessage(
                     "Debian Changelog Item Creator: No active text editor found."
@@ -112,7 +159,7 @@ function activate(context) {
 
     context.subscriptions.push(newChangelogItem);
     context.subscriptions.push(editEmailAddress);
-    context.subscriptions.push(editUserName);
+    context.subscriptions.push(editName);
 
     async function promptForName() {
         // Prompt the user to enter their name
@@ -133,7 +180,7 @@ function activate(context) {
                 "debian-changelog-item-creator"
             );
             await config.update(
-                "userName",
+                "name",
                 name,
                 vscode.ConfigurationTarget.Global
             );

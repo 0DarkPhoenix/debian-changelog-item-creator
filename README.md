@@ -14,7 +14,7 @@ The "Debian Changelog Item Creator" extension for Visual Studio Code helps you e
 ## Usage
 
 1. **Set User Information**:
-    - Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and run `Debian Changelog Item Creator: Edit User Name` to set your name.
+    - Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and run `Debian Changelog Item Creator: Edit Name` to set your name.
     - Run `Debian Changelog Item Creator: Edit Email Address` to set your email address.
 
 2. **Create a New Changelog Entry**:
@@ -26,16 +26,17 @@ The "Debian Changelog Item Creator" extension for Visual Studio Code helps you e
 
 This extension contributes the following settings:
 
-- `debian-changelog-item-creator.userName`: Your name to be used in changelog entries.
+- `debian-changelog-item-creator.name`: Your name to be used in changelog entries.
 - `debian-changelog-item-creator.emailAddress`: Your email address to be used in changelog entries.
 
-## Commands
+## Commands and Shortcuts
 
-This extension contributes the following commands:
+This extension contributes the following commands and their default shortcuts:
 
-- `debian-changelog-item-creator.editUserName`: Prompts you to enter and save your name.
+- `debian-changelog-item-creator.editName`: Prompts you to enter and save your name.
 - `debian-changelog-item-creator.editEmailAddress`: Prompts you to enter and save your email address.
 - `debian-changelog-item-creator.newChangelogItem`: Creates a new changelog entry at the current cursor position.
+  - **Shortcut**: `Ctrl+Win+Alt+C` (Windows/Linux) or `Ctrl+Cmd+Alt+C` (Mac)
 
 ## Known Issues
 
