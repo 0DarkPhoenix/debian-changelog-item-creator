@@ -9,6 +9,10 @@
     },
     "icon": "images/debian-changelog.png",
     "main": "./extension.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/0DarkPhoenix/debian-changelog-item-creator.git"
+    },
     "contributes": {
         "commands": [
             {
