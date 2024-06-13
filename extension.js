@@ -126,7 +126,7 @@ function activate(context) {
                 const currentDate = new Date();
                 const formattedDate = formatDate(currentDate);
 
-                const template = `${title} (${newVersion}) stable; urgency=low\n\n\t* Release ${newVersion}\n\n\t- ${changelogMessage}\n\n\t-- ${name} <${email}> ${formattedDate}`;
+                const template = `${title} (${newVersion}) stable; urgency=low\n\n\t* Release ${newVersion}\n\n\t- ${changelogMessage}\n\n\    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces on the last line instead of a tab to make the changelog syntax highlighting work
 
                 editor
                     .edit((editBuilder) => {

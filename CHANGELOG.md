@@ -1,9 +1,10 @@
 # Change Log
+## [0.0.2] - 2024-06-13
 
-All notable changes to the "debian-changelog-item-creator" extension will be documented in this file.
+### Changed
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+- Replaced tab (\t) with 4 spaces of the last line of a new changelog item so the syntax highlighting of the debian/changelog file would work correctly
 
-## [Unreleased]
+## [0.0.1] - 2024-06-13
 
--   Initial release
+### Initial release
