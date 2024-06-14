@@ -3,7 +3,7 @@
     "displayName": "Debian Changelog Item Creator",
     "description": "An extension which can dynamically add a new Debian changelog item",
     "publisher": "DarkPhoenix",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "engines": {
         "vscode": "^1.89.0"
     },
@@ -48,12 +48,7 @@
             {
                 "command": "debian-changelog-item-creator.newChangelogItem",
                 "key": "ctrl+win+alt+c",
-                "when": "editorTextFocus && !isMac"
-            },
-            {
-                "command": "debian-changelog-item-creator.newChangelogItem",
-                "key": "ctrl+cmd+alt+c",
-                "when": "editorTextFocus && isMac"
+                "when": "editorTextFocus"
             }
         ]
     },
