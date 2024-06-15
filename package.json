@@ -7,7 +7,7 @@
     "engines": {
         "vscode": "^1.89.0"
     },
-    "icon": "images/debian-changelog.png",
+    "icon": "images/logo.png",
     "main": "./extension.js",
     "repository": {
         "type": "git",
