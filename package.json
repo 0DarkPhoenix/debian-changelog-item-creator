@@ -1,7 +1,7 @@
 {
     "name": "debian-changelog-item-creator",
     "displayName": "Debian Changelog Item Creator",
-    "description": "An extension which can dynamically add a new Debian changelog item",
+    "description": "Add a generated Debian changelog item",
     "publisher": "DarkPhoenix",
     "version": "0.0.3",
     "engines": {
