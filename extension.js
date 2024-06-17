@@ -52,7 +52,8 @@ function activate(context) {
                     return;
                 }
 
-                const { title, version } = parseChangelogLine(changelogLine);
+                const { title, version, distribution } =
+                    parseChangelogLine(changelogLine);
                 const newVersion = bumpVersion(version);
                 let changelogMessage = "";
 
@@ -85,6 +86,12 @@ function activate(context) {
                         });
                     }
                 }
+
+                // Format the changelog message with indentation and bullet points
+                const formattedChangelogMessage = changelogMessage
+                    .split("\n")
+                    .map((line) => `    - ${line.trim()}`)
+                    .join("\n");
 
                 // Function to format the date string in the desired format
                 const formatDate = (date) => {
@@ -126,7 +133,7 @@ function activate(context) {
                 const currentDate = new Date();
                 const formattedDate = formatDate(currentDate);
 
-                const template = `${title} (${newVersion}) stable; urgency=low\n\n\t* Release ${newVersion}\n\n\t- ${changelogMessage}\n\n\    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces on the last line instead of a tab to make the changelog syntax highlighting work
+                const template = `${title} (${newVersion}) ${distribution}; urgency=low\n\n    * Release ${newVersion}\n\n${formattedChangelogMessage}\n\n    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces instead of tabs to prevent issues with syntax highlighting and positioning
 
                 editor
                     .edit((editBuilder) => {
@@ -137,8 +144,8 @@ function activate(context) {
                             // Place the cursor at the position of changelogMessage
                             const position = editor.selection.active;
                             const newPosition = position.with(
-                                position.line - 2,
-                                4
+                                position.line - 2, // Determines line
+                                6 // Determines position in line
                             );
                             editor.selection = new vscode.Selection(
                                 newPosition,
@@ -167,21 +174,20 @@ function activate(context) {
             placeHolder: "Enter your name (Firstname Lastname)",
             prompt: "Please enter your name (Firstname Lastname)",
             validateInput: (text) => {
-                const nameRegex = /^[a-zA-Z]+ [a-zA-Z]+$/;
-                return nameRegex.test(text) && text.includes(" ")
-                    ? null
-                    : "Please enter your name in the format: Firstname Lastname";
+                return text.trim() === ""
+                    ? "Name cannot be empty or contain only spaces"
+                    : null;
             },
         });
 
-        if (name) {
+        if (name && name.trim() !== "") {
             // Save the name in the global settings under debian-changelog-item-creator namespace
             const config = vscode.workspace.getConfiguration(
                 "debian-changelog-item-creator"
             );
             await config.update(
                 "name",
-                name,
+                name.trim(),
                 vscode.ConfigurationTarget.Global
             );
 
@@ -228,19 +234,21 @@ function activate(context) {
     }
 
     function parseChangelogLine(line) {
-        const regex = /^(.*?) \((.*?)\) stable; urgency=low$/;
+        const regex = /^(.*?) \((.*?)\) (.*?); urgency=low$/;
         const match = line.match(regex);
 
         if (match) {
             return {
                 title: match[1],
                 version: match[2],
+                distribution: match[3],
             };
         }
 
         return {
             title: "",
             version: "",
+            distribution: "stable", // Default to "stable" if not found
         };
     }
 
@@ -250,7 +258,7 @@ function activate(context) {
 
         for (let i = cursorPosition; i < document.lineCount; i++) {
             const lineText = document.lineAt(i).text;
-            if (lineText.match(/^(.*?) \((.*?)\) stable; urgency=low$/)) {
+            if (lineText.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)) {
                 return lineText;
             }
         }
