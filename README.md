@@ -13,14 +13,18 @@ The "Debian Changelog Item Creator" extension for Visual Studio Code helps you e
 
 ## Usage
 
-1. **Set User Information**:
-    - Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and run `Debian Changelog Item Creator: Edit Name` to set your name.
+1. **Create a New Changelog Entry**:
+    - Place your cursor in the changelog file where you want to add a new entry.
+    - Use the command palette to run `Debian Changelog Item Creator: New Changelog Item` or use the default shortcut `Ctrl+Win+Alt+c` for Windows and `Ctrl+Option+Cmd+c` for MacOS.
+    - The extension will automatically insert a new changelog entry with the incremented version number, current date, and your configured name and email.
+
+2. **Update the Datetime of a Changelog Entry**:
+   - Place your cursor in the changelog entry you want to update and use `Ctrl+Win+Alt+i` for Windows or `Ctrl+Option+Cmd+i` for MacOS.
+
+3. **Edit User Information**:
+    - Use the command palette (`Ctrl+Shift+P` on Windows or `Cmd+Shift+P` on Mac) and run `Debian Changelog Item Creator: Edit Name` to set your name.
     - Run `Debian Changelog Item Creator: Edit Email Address` to set your email address.
 
-2. **Create a New Changelog Entry**:
-    - Place your cursor in the changelog file where you want to add a new entry.
-    - Use the command palette to run `Debian Changelog Item Creator: New Changelog Item`.
-    - The extension will automatically insert a new changelog entry with the incremented version number, current date, and your configured name and email.
 
 ## Extension Settings
 
@@ -37,7 +41,9 @@ This extension contributes the following commands and their default shortcuts:
 - `debian-changelog-item-creator.editEmailAddress`: Prompts you to enter and save your email address.
 - `debian-changelog-item-creator.newChangelogItem`: Creates a new changelog entry at the current cursor position.
   - **Shortcut**: `Ctrl+Win+Alt+C` (Windows/Linux) or `Ctrl+Cmd+Alt+C` (Mac)
+- `debian-changelog-item-creator.updateChangelogDate`: Updates the datetime of the current cursor position.
+  - **Shortcut**: `Ctrl+Win+Alt+I` (Windows/Linux) or `Ctrl+Option+Cmd+I` (Mac)
 
 ## Known Issues
 
-- Ensure your cursor is placed correctly within the changelog file before running the `newChangelogItem` command to avoid errors.
+- Ensure your cursor is placed correctly within a changelog file before running the `newChangelogItem` command to avoid errors.
