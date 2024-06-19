@@ -1,7 +1,12 @@
+## [0.1.0] - 2024-06-19
+### Added
+- Ability to update the time of a changelog item to the current time (Shortcut: `Ctrl+Win+Alt+i` for Windows and `Ctrl+Option+Cmd+i` for MacOS)
+- A new changelog item will automatically add a newline at the top and/or bottom if it wasn't present already to prevent crammed changelogs without proper spacing
+
 ## [0.0.4] - 2024-06-17
 ### Added
 - Ability to create a changelog with multiple lines of bulletpoints when selecting multiple lines of text
-- Distribution being dynamically determined by the previous changelog item 
+- Distribution (like "stable", "beta", "alpha", etc.) being dynamically determined by the previous changelog item
 ## Changed
 - Changed all tabs with 4 spaces to solve issues with indentation
 - Removed regex from name registration
