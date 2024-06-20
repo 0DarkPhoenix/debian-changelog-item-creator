@@ -133,7 +133,7 @@ function activate(context) {
                 const currentDate = new Date();
                 const formattedDate = formatDate(currentDate);
 
-                const template = `${title} (${newVersion}) ${distribution}; urgency=low\n\n    * Release ${newVersion}\n\n${formattedChangelogMessage}\n    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces instead of tabs to prevent issues with syntax highlighting and positioning
+                const template = `${title} (${newVersion}) ${distribution}; urgency=low\n\n    * Release ${newVersion}\n\n${formattedChangelogMessage}\n\n    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces instead of tabs to prevent issues with syntax highlighting and positioning
 
                 await editor.edit((editBuilder) => {
                     editBuilder.insert(editor.selection.active, template);
@@ -170,7 +170,7 @@ function activate(context) {
 
                 if (!changelogMessage) {
                     // Place the cursor at the position of changelogMessage
-                    const newPosition = new vscode.Position(startLine + 3, 6); // Adjust the line and character position as needed
+                    const newPosition = new vscode.Position(startLine + 5, 6);
                     editor.selection = new vscode.Selection(
                         newPosition,
                         newPosition
