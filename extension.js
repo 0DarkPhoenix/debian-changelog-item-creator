@@ -4,400 +4,384 @@ const vscode = require("vscode");
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-    const editEmailAddress = vscode.commands.registerCommand(
-					"debian-changelog-item-creator.editEmailAddress",
-					async () => {
-						await promptForEmail();
-					},
+	const editEmailAddress = vscode.commands.registerCommand(
+		"debian-changelog-item-creator.editEmailAddress",
+		async () => {
+			await promptForEmail();
+		},
+	);
+
+	const editName = vscode.commands.registerCommand(
+		"debian-changelog-item-creator.editName",
+		async () => {
+			await promptForName();
+		},
+	);
+
+	const newChangelogItem = vscode.commands.registerCommand(
+		"debian-changelog-item-creator.newChangelogItem",
+		async () => {
+			const config = vscode.workspace.getConfiguration(
+				"debian-changelog-item-creator",
+			);
+			let name = config.get("name");
+			let email = config.get("emailAddress");
+
+			if (!name) {
+				name = await promptForName();
+			}
+
+			if (!email) {
+				email = await promptForEmail();
+			}
+
+			if (!name || !email) {
+				vscode.window.showErrorMessage(
+					"Debian Changelog Item Creator: Name or Email is not set.",
 				);
+				return;
+			}
 
-    const editName = vscode.commands.registerCommand(
-					"debian-changelog-item-creator.editName",
-					async () => {
-						await promptForName();
-					},
-				);
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const changelogLine = findChangelogLine(editor);
+				if (!changelogLine) {
+					vscode.window.showErrorMessage(
+						"Debian Changelog Item Creator: No changelog line found below the cursor.",
+					);
+					return;
+				}
 
-    const newChangelogItem = vscode.commands.registerCommand(
-					"debian-changelog-item-creator.newChangelogItem",
-					async () => {
-						const config = vscode.workspace.getConfiguration(
-							"debian-changelog-item-creator",
-						);
-						let name = config.get("name");
-						let email = config.get("emailAddress");
+				const { title, version, distribution } =
+					parseChangelogLine(changelogLine);
+				const newVersion = bumpVersion(version);
+				let changelogMessage = "";
 
-						if (!name) {
-							name = await promptForName();
-						}
-
-						if (!email) {
-							email = await promptForEmail();
-						}
-
-						if (!name || !email) {
-							vscode.window.showErrorMessage(
-								"Debian Changelog Item Creator: Name or Email is not set.",
-							);
-							return;
-						}
-
-						const editor = vscode.window.activeTextEditor;
-						if (editor) {
-							const changelogLine = findChangelogLine(editor);
-							if (!changelogLine) {
-								vscode.window.showErrorMessage(
-									"Debian Changelog Item Creator: No changelog line found below the cursor.",
-								);
-								return;
-							}
-
-							const { title, version, distribution } =
-								parseChangelogLine(changelogLine);
-							const newVersion = bumpVersion(version);
-							let changelogMessage = "";
-
-							// Check if there is selected text
-							const selection = editor.selection;
-							if (!selection.isEmpty) {
-								changelogMessage = editor.document.getText(selection);
-								// Remove the selected text
-								await editor.edit((editBuilder) => {
-									editBuilder.delete(selection);
-								});
-							} else {
-								// Check if the cursor is at the end of a line with text
-								const cursorPosition = editor.selection.active;
-								const lineText = editor.document.lineAt(
+				// Check if there is selected text
+				const selection = editor.selection;
+				if (!selection.isEmpty) {
+					changelogMessage = editor.document.getText(selection);
+					// Remove the selected text
+					await editor.edit((editBuilder) => {
+						editBuilder.delete(selection);
+					});
+				} else {
+					// Check if the cursor is at the end of a line with text
+					const cursorPosition = editor.selection.active;
+					const lineText = editor.document.lineAt(cursorPosition.line).text;
+					if (cursorPosition.character === lineText.length) {
+						changelogMessage = lineText.trim();
+						// Remove the line text
+						await editor.edit((editBuilder) => {
+							editBuilder.delete(
+								new vscode.Range(
 									cursorPosition.line,
-								).text;
-								if (cursorPosition.character === lineText.length) {
-									changelogMessage = lineText.trim();
-									// Remove the line text
-									await editor.edit((editBuilder) => {
-										editBuilder.delete(
-											new vscode.Range(
-												cursorPosition.line,
-												0,
-												cursorPosition.line,
-												lineText.length,
-											),
-										);
-									});
-								}
-							}
-
-							// Format the changelog message with indentation and bullet points
-							const formattedChangelogMessage = changelogMessage
-								.split("\n")
-								.map((line) => `    - ${line.trim()}`)
-								.join("\n");
-
-							// Function to format the date string in the desired format
-							const formatDate = (date) => {
-								const options = {
-									weekday: "short",
-									day: "2-digit",
-									month: "short",
-									year: "numeric",
-									hour: "2-digit",
-									minute: "2-digit",
-									second: "2-digit",
-									timeZoneName: "short",
-									hour12: false,
-								};
-
-								const formatter = new Intl.DateTimeFormat("en-US", options);
-
-								const parts = formatter
-									.formatToParts(date)
-									.reduce((acc, part) => {
-										acc[part.type] = part.value;
-										return acc;
-									}, {});
-
-								const day = parts.day.padStart(2, "0");
-								const month = parts.month;
-								const year = parts.year;
-								const weekday = parts.weekday;
-								const hour = parts.hour.padStart(2, "0");
-								const minute = parts.minute.padStart(2, "0");
-								const second = parts.second.padStart(2, "0");
-								const timeZoneOffset = date
-									.toString()
-									.match(/([+-][0-9]{4})/)[1];
-
-								return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${timeZoneOffset}`;
-							};
-
-							const currentDate = new Date();
-							const formattedDate = formatDate(currentDate);
-
-							const template = `${title} (${newVersion}) ${distribution}; urgency=low\n\n    * Release ${newVersion}\n\n${formattedChangelogMessage}\n\n    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces instead of tabs to prevent issues with syntax highlighting and positioning
-
-							await editor.edit((editBuilder) => {
-								editBuilder.insert(editor.selection.active, template);
-							});
-
-							// Ensure there's a newline at the top and bottom of the newly inserted changelog item
-							const position = editor.selection.active;
-							const startLine = position.line - template.split("\n").length + 1;
-							const endLine = position.line;
-
-							await editor.edit((editBuilder) => {
-								// Check and add newline at the top
-								if (
-									startLine > 0 &&
-									editor.document.lineAt(startLine - 1).text.trim() !== ""
-								) {
-									editBuilder.insert(new vscode.Position(startLine, 0), "\n");
-								}
-								// Check and add newline at the bottom
-								if (
-									endLine < editor.document.lineCount - 1 &&
-									editor.document.lineAt(endLine + 1).text.trim() !== ""
-								) {
-									editBuilder.insert(new vscode.Position(endLine + 1, 0), "\n");
-								}
-							});
-
-							if (!changelogMessage) {
-								// Place the cursor at the position of changelogMessage
-								const newPosition = new vscode.Position(startLine + 5, 6);
-								editor.selection = new vscode.Selection(
-									newPosition,
-									newPosition,
-								);
-								editor.revealRange(new vscode.Range(newPosition, newPosition));
-							}
-						} else {
-							vscode.window.showErrorMessage(
-								"Debian Changelog Item Creator: No active text editor found.",
-							);
-						}
-					},
-				);
-
-    const updateChangelogDate = vscode.commands.registerCommand(
-					"debian-changelog-item-creator.updateChangelogDate",
-					async () => {
-						const editor = vscode.window.activeTextEditor;
-						if (editor) {
-							const document = editor.document;
-							const cursorPosition = editor.selection.active;
-
-							// Find the start of the changelog item
-							let startLine = cursorPosition.line;
-							while (
-								startLine >= 0 &&
-								!document
-									.lineAt(startLine)
-									.text.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)
-							) {
-								startLine--;
-							}
-
-							// Find the end of the changelog item
-							let endLine = cursorPosition.line;
-							while (
-								endLine < document.lineCount &&
-								!document.lineAt(endLine).text.startsWith("    -- ")
-							) {
-								endLine++;
-							}
-							console.log("startLine:", startLine);
-							console.log("endLine:", endLine);
-							if (startLine < 0 || endLine >= document.lineCount) {
-								vscode.window.showErrorMessage(
-									"Debian Changelog Item Creator: Could not find the changelog item boundaries.",
-								);
-								return;
-							}
-
-							// Format the current date
-							const currentDate = new Date();
-							const formattedDate = formatDate(currentDate);
-
-							// Extract the author and email from the end line
-							const endLineText = document.lineAt(endLine).text;
-							const authorEmailMatch = endLineText.match(/-- (.*) <(.*)>/);
-							if (!authorEmailMatch) {
-								vscode.window.showErrorMessage(
-									"Debian Changelog Item Creator: Could not extract author and email information.",
-								);
-								return;
-							}
-							const author = authorEmailMatch[1];
-							const email = authorEmailMatch[2];
-
-							// Replace the date in the changelog item
-							const range = new vscode.Range(
-								new vscode.Position(endLine, 0),
-								new vscode.Position(
-									endLine,
-									document.lineAt(endLine).text.length,
+									0,
+									cursorPosition.line,
+									lineText.length,
 								),
 							);
+						});
+					}
+				}
 
-							const newLineText = `    -- ${author} <${email}> ${formattedDate}`;
+				// Format the changelog message with indentation and bullet points
+				const formattedChangelogMessage = changelogMessage
+					.split("\n")
+					.map((line) => `    - ${line.trim()}`)
+					.join("\n");
 
-							await editor.edit((editBuilder) => {
-								editBuilder.replace(range, newLineText);
-							});
+				// Function to format the date string in the desired format
+				const formatDate = (date) => {
+					const options = {
+						weekday: "short",
+						day: "2-digit",
+						month: "short",
+						year: "numeric",
+						hour: "2-digit",
+						minute: "2-digit",
+						second: "2-digit",
+						timeZoneName: "short",
+						hour12: false,
+					};
 
-							vscode.window.showInformationMessage(
-								"Changelog date updated successfully!",
-							);
-						} else {
-							vscode.window.showErrorMessage(
-								"Debian Changelog Item Creator: No active text editor found.",
-							);
-						}
-					},
+					const formatter = new Intl.DateTimeFormat("en-US", options);
+
+					const parts = formatter.formatToParts(date).reduce((acc, part) => {
+						acc[part.type] = part.value;
+						return acc;
+					}, {});
+
+					const day = parts.day.padStart(2, "0");
+					const month = parts.month;
+					const year = parts.year;
+					const weekday = parts.weekday;
+					const hour = parts.hour.padStart(2, "0");
+					const minute = parts.minute.padStart(2, "0");
+					const second = parts.second.padStart(2, "0");
+					const timeZoneOffset = date.toString().match(/([+-][0-9]{4})/)[1];
+
+					return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${timeZoneOffset}`;
+				};
+
+				const currentDate = new Date();
+				const formattedDate = formatDate(currentDate);
+
+				const template = `${title} (${newVersion}) ${distribution}; urgency=low\n\n    * Release ${newVersion}\n\n${formattedChangelogMessage}\n\n    -- ${name} <${email}> ${formattedDate}`; // Using normal spaces instead of tabs to prevent issues with syntax highlighting and positioning
+
+				await editor.edit((editBuilder) => {
+					editBuilder.insert(editor.selection.active, template);
+				});
+
+				// Ensure there's a newline at the top and bottom of the newly inserted changelog item
+				const position = editor.selection.active;
+				const startLine = position.line - template.split("\n").length + 1;
+				const endLine = position.line;
+
+				await editor.edit((editBuilder) => {
+					// Check and add newline at the top
+					if (
+						startLine > 0 &&
+						editor.document.lineAt(startLine - 1).text.trim() !== ""
+					) {
+						editBuilder.insert(new vscode.Position(startLine, 0), "\n");
+					}
+					// Check and add newline at the bottom
+					if (
+						endLine < editor.document.lineCount - 1 &&
+						editor.document.lineAt(endLine + 1).text.trim() !== ""
+					) {
+						editBuilder.insert(new vscode.Position(endLine + 1, 0), "\n");
+					}
+				});
+
+				if (!changelogMessage) {
+					// Place the cursor at the position of changelogMessage
+					const newPosition = new vscode.Position(startLine + 5, 6);
+					editor.selection = new vscode.Selection(newPosition, newPosition);
+					editor.revealRange(new vscode.Range(newPosition, newPosition));
+				}
+			} else {
+				vscode.window.showErrorMessage(
+					"Debian Changelog Item Creator: No active text editor found.",
+				);
+			}
+		},
+	);
+
+	const updateChangelogDate = vscode.commands.registerCommand(
+		"debian-changelog-item-creator.updateChangelogDate",
+		async () => {
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const document = editor.document;
+				const cursorPosition = editor.selection.active;
+
+				// Find the start of the changelog item
+				let startLine = cursorPosition.line;
+				while (
+					startLine >= 0 &&
+					!document
+						.lineAt(startLine)
+						.text.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)
+				) {
+					startLine--;
+				}
+
+				// Find the end of the changelog item
+				let endLine = cursorPosition.line;
+				while (
+					endLine < document.lineCount &&
+					!document.lineAt(endLine).text.startsWith("    -- ")
+				) {
+					endLine++;
+				}
+				console.log("startLine:", startLine);
+				console.log("endLine:", endLine);
+				if (startLine < 0 || endLine >= document.lineCount) {
+					vscode.window.showErrorMessage(
+						"Debian Changelog Item Creator: Could not find the changelog item boundaries.",
+					);
+					return;
+				}
+
+				// Format the current date
+				const currentDate = new Date();
+				const formattedDate = formatDate(currentDate);
+
+				// Extract the author and email from the end line
+				const endLineText = document.lineAt(endLine).text;
+				const authorEmailMatch = endLineText.match(/-- (.*) <(.*)>/);
+				if (!authorEmailMatch) {
+					vscode.window.showErrorMessage(
+						"Debian Changelog Item Creator: Could not extract author and email information.",
+					);
+					return;
+				}
+				const author = authorEmailMatch[1];
+				const email = authorEmailMatch[2];
+
+				// Replace the date in the changelog item
+				const range = new vscode.Range(
+					new vscode.Position(endLine, 0),
+					new vscode.Position(endLine, document.lineAt(endLine).text.length),
 				);
 
-    context.subscriptions.push(newChangelogItem);
-    context.subscriptions.push(editEmailAddress);
-    context.subscriptions.push(editName);
-    context.subscriptions.push(updateChangelogDate);
+				const newLineText = `    -- ${author} <${email}> ${formattedDate}`;
 
-    async function promptForName() {
-        // Prompt the user to enter their name
-        const name = await vscode.window.showInputBox({
-            placeHolder: "Enter your name (Firstname Lastname)",
-            prompt: "Please enter your name (Firstname Lastname)",
-            validateInput: (text) => {
-                return text.trim() === ""
-                    ? "Name cannot be empty or contain only spaces"
-                    : null;
-            },
-        });
+				await editor.edit((editBuilder) => {
+					editBuilder.replace(range, newLineText);
+				});
 
-        if (name && name.trim() !== "") {
-            // Save the name in the global settings under debian-changelog-item-creator namespace
-            const config = vscode.workspace.getConfiguration(
-                "debian-changelog-item-creator"
-            );
-            await config.update(
-                "name",
-                name.trim(),
-                vscode.ConfigurationTarget.Global
-            );
+				vscode.window.showInformationMessage(
+					"Changelog date updated successfully!",
+				);
+			} else {
+				vscode.window.showErrorMessage(
+					"Debian Changelog Item Creator: No active text editor found.",
+				);
+			}
+		},
+	);
 
-            vscode.window.showInformationMessage("Name saved successfully!");
-        } else {
-            vscode.window.showWarningMessage("Name input was cancelled.");
-        }
-        return name;
-    }
+	context.subscriptions.push(newChangelogItem);
+	context.subscriptions.push(editEmailAddress);
+	context.subscriptions.push(editName);
+	context.subscriptions.push(updateChangelogDate);
 
-    async function promptForEmail() {
-        // Prompt the user to enter their email address
-        const email = await vscode.window.showInputBox({
-            placeHolder: "Enter your email address",
-            prompt: "Please enter your email address",
-            validateInput: (text) => {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return emailRegex.test(text)
-                    ? null
-                    : "Please enter a valid email address";
-            },
-        });
+	async function promptForName() {
+		// Prompt the user to enter their name
+		const name = await vscode.window.showInputBox({
+			placeHolder: "Enter your name (Firstname Lastname)",
+			prompt: "Please enter your name (Firstname Lastname)",
+			validateInput: (text) => {
+				return text.trim() === ""
+					? "Name cannot be empty or contain only spaces"
+					: null;
+			},
+		});
 
-        if (email) {
-            // Save the email address in the global settings under debian-changelog-item-creator namespace
-            const config = vscode.workspace.getConfiguration(
-                "debian-changelog-item-creator"
-            );
-            await config.update(
-                "emailAddress",
-                email,
-                vscode.ConfigurationTarget.Global
-            );
+		if (name && name.trim() !== "") {
+			// Save the name in the global settings under debian-changelog-item-creator namespace
+			const config = vscode.workspace.getConfiguration(
+				"debian-changelog-item-creator",
+			);
+			await config.update(
+				"name",
+				name.trim(),
+				vscode.ConfigurationTarget.Global,
+			);
 
-            vscode.window.showInformationMessage(
-                "Email address saved successfully!"
-            );
-        } else {
-            vscode.window.showWarningMessage(
-                "Email address input was cancelled."
-            );
-        }
-        return email;
-    }
+			vscode.window.showInformationMessage("Name saved successfully!");
+		} else {
+			vscode.window.showWarningMessage("Name input was cancelled.");
+		}
+		return name;
+	}
 
-    function parseChangelogLine(line) {
-        const regex = /^(.*?) \((.*?)\) (.*?); urgency=low$/;
-        const match = line.match(regex);
+	async function promptForEmail() {
+		// Prompt the user to enter their email address
+		const email = await vscode.window.showInputBox({
+			placeHolder: "Enter your email address",
+			prompt: "Please enter your email address",
+			validateInput: (text) => {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				return emailRegex.test(text)
+					? null
+					: "Please enter a valid email address";
+			},
+		});
 
-        if (match) {
-            return {
-                title: match[1],
-                version: match[2],
-                distribution: match[3],
-            };
-        }
+		if (email) {
+			// Save the email address in the global settings under debian-changelog-item-creator namespace
+			const config = vscode.workspace.getConfiguration(
+				"debian-changelog-item-creator",
+			);
+			await config.update(
+				"emailAddress",
+				email,
+				vscode.ConfigurationTarget.Global,
+			);
 
-        return {
-            title: "",
-            version: "",
-            distribution: "stable", // Default to "stable" if not found
-        };
-    }
+			vscode.window.showInformationMessage("Email address saved successfully!");
+		} else {
+			vscode.window.showWarningMessage("Email address input was cancelled.");
+		}
+		return email;
+	}
 
-    function findChangelogLine(editor) {
-        const document = editor.document;
-        const cursorPosition = editor.selection.active.line;
+	function parseChangelogLine(line) {
+		const regex = /^(.*?) \((.*?)\) (.*?); urgency=low$/;
+		const match = line.match(regex);
 
-        for (let i = cursorPosition; i < document.lineCount; i++) {
-            const lineText = document.lineAt(i).text;
-            if (lineText.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)) {
-                return lineText;
-            }
-        }
+		if (match) {
+			return {
+				title: match[1],
+				version: match[2],
+				distribution: match[3],
+			};
+		}
 
-        return null;
-    }
+		return {
+			title: "",
+			version: "",
+			distribution: "stable", // Default to "stable" if not found
+		};
+	}
 
-    function bumpVersion(version) {
-        const parts = version.split(".").map(Number);
-        parts[parts.length - 1]++;
-        return parts.join(".");
-    }
+	function findChangelogLine(editor) {
+		const document = editor.document;
+		const cursorPosition = editor.selection.active.line;
 
-    function formatDate(date) {
-        const options = {
-            weekday: "short",
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            timeZoneName: "short",
-            hour12: false,
-        };
+		for (let i = cursorPosition; i < document.lineCount; i++) {
+			const lineText = document.lineAt(i).text;
+			if (lineText.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)) {
+				return lineText;
+			}
+		}
 
-        const formatter = new Intl.DateTimeFormat("en-US", options);
+		return null;
+	}
 
-        const parts = formatter.formatToParts(date).reduce((acc, part) => {
-            acc[part.type] = part.value;
-            return acc;
-        }, {});
+	function bumpVersion(version) {
+		const parts = version.split(".").map(Number);
+		parts[parts.length - 1]++;
+		return parts.join(".");
+	}
 
-        const day = parts.day.padStart(2, "0");
-        const month = parts.month;
-        const year = parts.year;
-        const weekday = parts.weekday;
-        const hour = parts.hour.padStart(2, "0");
-        const minute = parts.minute.padStart(2, "0");
-        const second = parts.second.padStart(2, "0");
-        const timeZoneOffset = date.toString().match(/([+-][0-9]{4})/)[1];
+	function formatDate(date) {
+		const options = {
+			weekday: "short",
+			day: "2-digit",
+			month: "short",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			timeZoneName: "short",
+			hour12: false,
+		};
 
-        return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${timeZoneOffset}`;
-    }
+		const formatter = new Intl.DateTimeFormat("en-US", options);
+
+		const parts = formatter.formatToParts(date).reduce((acc, part) => {
+			acc[part.type] = part.value;
+			return acc;
+		}, {});
+
+		const day = parts.day.padStart(2, "0");
+		const month = parts.month;
+		const year = parts.year;
+		const weekday = parts.weekday;
+		const hour = parts.hour.padStart(2, "0");
+		const minute = parts.minute.padStart(2, "0");
+		const second = parts.second.padStart(2, "0");
+		const timeZoneOffset = date.toString().match(/([+-][0-9]{4})/)[1];
+
+		return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${timeZoneOffset}`;
+	}
 }
 
 module.exports = {
-    activate,
+	activate,
 };
