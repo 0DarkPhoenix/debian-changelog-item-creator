@@ -1,3 +1,10 @@
+## [0.1.2] - 2024-06-20
+### Added
+- Automatically adds a - if you press enter on a line where you put your changelog message
+
+### Fixed
+- Missing newline between the second to last and the last line of the changelog item
+
 ## [0.1.0] - 2024-06-19
 ### Added
 - Ability to update the time of a changelog item to the current time (Shortcut: `Ctrl+Win+Alt+i` for Windows and `Ctrl+Option+Cmd+i` for MacOS)

@@ -244,10 +244,38 @@ function activate(context) {
 		},
 	);
 
+	const handleEnterKey = vscode.commands.registerCommand(
+		"debian-changelog-item-creator.handleEnterKey",
+		async () => {
+			const editor = vscode.window.activeTextEditor;
+			if (editor) {
+				const document = editor.document;
+				const cursorPosition = editor.selection.active;
+
+				// Check if the current line starts with "    -"
+				const currentLineText = document.lineAt(cursorPosition.line).text;
+				if (currentLineText.trim().startsWith("-")) {
+					// Insert a "-" on the new line
+					await editor.edit((editBuilder) => {
+						editBuilder.insert(cursorPosition, "\n    - ");
+					});
+
+					// Move the cursor to the new line
+					const newPosition = new vscode.Position(cursorPosition.line + 1, 6);
+					editor.selection = new vscode.Selection(newPosition, newPosition);
+				} else {
+					// If not within a changelog item, just insert a new line
+					await vscode.commands.executeCommand("type", { text: "\n" });
+				}
+			}
+		},
+	);
+
 	context.subscriptions.push(newChangelogItem);
 	context.subscriptions.push(editEmailAddress);
 	context.subscriptions.push(editName);
 	context.subscriptions.push(updateChangelogDate);
+	context.subscriptions.push(handleEnterKey);
 
 	async function promptForName() {
 		// Prompt the user to enter their name

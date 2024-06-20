@@ -1,78 +1,83 @@
 {
-    "name": "debian-changelog-item-creator",
-    "displayName": "Debian Changelog Item Creator",
-    "description": "Add a generated Debian changelog item",
-    "publisher": "DarkPhoenix",
-    "version": "0.1.1",
-    "engines": {
-        "vscode": "^1.89.0"
-    },
-    "icon": "images/logo.png",
-    "main": "./extension.js",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/0DarkPhoenix/debian-changelog-item-creator.git"
-    },
-    "contributes": {
-        "commands": [
-            {
-                "command": "debian-changelog-item-creator.newChangelogItem",
-                "title": "Debian Changelog Item Creator: Add New Changelog Item"
-            },
-            {
-                "command": "debian-changelog-item-creator.editEmailAddress",
-                "title": "Debian Changelog Item Creator: Edit Email Address"
-            },
-            {
-                "command": "debian-changelog-item-creator.editName",
-                "title": "Debian Changelog Item Creator: Edit Name"
-            },
-            {
-                "command": "debian-changelog-item-creator.updateChangelogDate",
-                "title": "Debian Changelog Item Creator: Update Changelog Item Date"
-            }
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "Debian Changelog Item Creator Configuration",
-            "properties": {
-                "debian-changelog-item-creator.emailAddress": {
-                    "type": "string",
-                    "default": "",
-                    "description": "The email address to use in changelogs."
-                },
-                "debian-changelog-item-creator.name": {
-                    "type": "string",
-                    "default": "",
-                    "description": "The name to use in changelogs."
-                }
-            }
-        },
-        "keybindings": [
-            {
-                "command": "debian-changelog-item-creator.newChangelogItem",
-                "key": "ctrl+win+alt+c",
-                "when": "editorTextFocus"
-            },
-            {
-                "command": "debian-changelog-item-creator.updateChangelogDate",
-                "key": "ctrl+win+alt+i",
-                "when": "editorTextFocus"
-            }
-        ]
-    },
-    "scripts": {
-        "lint": "eslint .",
-        "pretest": "npm run lint",
-        "test": "vscode-test"
-    },
-    "devDependencies": {
-        "@types/vscode": "^1.89.0",
-        "@types/mocha": "^10.0.6",
-        "@types/node": "18.x",
-        "eslint": "^8.57.0",
-        "typescript": "^5.4.5",
-        "@vscode/test-cli": "^0.0.9",
-        "@vscode/test-electron": "^2.3.9"
-    }
+	"name": "debian-changelog-item-creator",
+	"displayName": "Debian Changelog Item Creator",
+	"description": "Add a generated Debian changelog item",
+	"publisher": "DarkPhoenix",
+	"version": "0.1.2",
+	"engines": {
+		"vscode": "^1.89.0"
+	},
+	"icon": "images/logo.png",
+	"main": "./extension.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/0DarkPhoenix/debian-changelog-item-creator.git"
+	},
+	"contributes": {
+		"commands": [
+			{
+				"command": "debian-changelog-item-creator.newChangelogItem",
+				"title": "Debian Changelog Item Creator: Add New Changelog Item"
+			},
+			{
+				"command": "debian-changelog-item-creator.editEmailAddress",
+				"title": "Debian Changelog Item Creator: Edit Email Address"
+			},
+			{
+				"command": "debian-changelog-item-creator.editName",
+				"title": "Debian Changelog Item Creator: Edit Name"
+			},
+			{
+				"command": "debian-changelog-item-creator.updateChangelogDate",
+				"title": "Debian Changelog Item Creator: Update Changelog Item Date"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Debian Changelog Item Creator Configuration",
+			"properties": {
+				"debian-changelog-item-creator.emailAddress": {
+					"type": "string",
+					"default": "",
+					"description": "The email address to use in changelogs."
+				},
+				"debian-changelog-item-creator.name": {
+					"type": "string",
+					"default": "",
+					"description": "The name to use in changelogs."
+				}
+			}
+		},
+		"keybindings": [
+			{
+				"command": "debian-changelog-item-creator.newChangelogItem",
+				"key": "ctrl+win+alt+c",
+				"when": "editorTextFocus"
+			},
+			{
+				"command": "debian-changelog-item-creator.updateChangelogDate",
+				"key": "ctrl+win+alt+i",
+				"when": "editorTextFocus"
+			},
+			{
+				"command": "debian-changelog-item-creator.handleEnterKey",
+				"key": "enter",
+				"when": "editorTextFocus"
+			}
+		]
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"pretest": "npm run lint",
+		"test": "vscode-test"
+	},
+	"devDependencies": {
+		"@types/vscode": "^1.89.0",
+		"@types/mocha": "^10.0.6",
+		"@types/node": "18.x",
+		"eslint": "^8.57.0",
+		"typescript": "^5.4.5",
+		"@vscode/test-cli": "^0.0.9",
+		"@vscode/test-electron": "^2.3.9"
+	}
 }
