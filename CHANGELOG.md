@@ -1,3 +1,8 @@
+## [0.1.3] - 2024-06-24
+### Fixed
+- Error "command 'debian-changelog-item-creator.handleEnterKey' not found" when using the enter key in certain situations inside and outside of the changelog file
+- Cursor ended up at the wrong line when inserting a new changelog item with no whitespace below
+
 ## [0.1.2] - 2024-06-20
 ### Added
 - Automatically adds a - if you press enter on a line where you put your changelog message

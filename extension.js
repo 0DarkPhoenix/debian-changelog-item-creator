@@ -135,29 +135,37 @@ function activate(context) {
 
 				// Ensure there's a newline at the top and bottom of the newly inserted changelog item
 				const position = editor.selection.active;
-				const startLine = position.line - template.split("\n").length + 1;
+				let startLine = position.line - template.split("\n").length + 1;
 				const endLine = position.line;
 
-				await editor.edit((editBuilder) => {
-					// Check and add newline at the top
-					if (
-						startLine > 0 &&
-						editor.document.lineAt(startLine - 1).text.trim() !== ""
-					) {
-						editBuilder.insert(new vscode.Position(startLine, 0), "\n");
-					}
-					// Check and add newline at the bottom
-					if (
-						endLine < editor.document.lineCount - 1 &&
-						editor.document.lineAt(endLine + 1).text.trim() !== ""
-					) {
-						editBuilder.insert(new vscode.Position(endLine + 1, 0), "\n");
-					}
-				});
+				await editor
+					.edit((editBuilder) => {
+						// Check and add newline at the top
+						if (
+							startLine > 0 &&
+							editor.document.lineAt(startLine - 1).text.trim() !== ""
+						) {
+							editBuilder.insert(new vscode.Position(startLine, 0), "\n");
+							startLine++;
+						}
+						// Check and add newline at the bottom
+						if (
+							endLine < editor.document.lineCount - 1 &&
+							editor.document.lineAt(endLine + 1).text.trim() !== ""
+						) {
+							editBuilder.insert(new vscode.Position(endLine + 1, 0), "\n");
+						}
+					})
+					.then(() => {
+						// Move the cursor to the startLine after the edit
+						const newPosition = new vscode.Position(startLine, 0);
+						editor.selection = new vscode.Selection(newPosition, newPosition);
+						editor.revealRange(new vscode.Range(newPosition, newPosition));
+					});
 
 				if (!changelogMessage) {
 					// Place the cursor at the position of changelogMessage
-					const newPosition = new vscode.Position(startLine + 5, 6);
+					const newPosition = new vscode.Position(startLine + 4, 6);
 					editor.selection = new vscode.Selection(newPosition, newPosition);
 					editor.revealRange(new vscode.Range(newPosition, newPosition));
 				}
@@ -247,26 +255,43 @@ function activate(context) {
 	const handleEnterKey = vscode.commands.registerCommand(
 		"debian-changelog-item-creator.handleEnterKey",
 		async () => {
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				const document = editor.document;
-				const cursorPosition = editor.selection.active;
+			try {
+				const editor = vscode.window.activeTextEditor;
+				if (editor) {
+					const document = editor.document;
 
-				// Check if the current line starts with "    -"
-				const currentLineText = document.lineAt(cursorPosition.line).text;
-				if (currentLineText.trim().startsWith("-")) {
-					// Insert a "-" on the new line
-					await editor.edit((editBuilder) => {
-						editBuilder.insert(cursorPosition, "\n    - ");
-					});
+					// Check if the file is a Debian changelog file
+					if (!document.fileName.endsWith("changelog")) {
+						await vscode.commands.executeCommand("type", { text: "\n" });
+						return;
+					}
 
-					// Move the cursor to the new line
-					const newPosition = new vscode.Position(cursorPosition.line + 1, 6);
-					editor.selection = new vscode.Selection(newPosition, newPosition);
-				} else {
-					// If not within a changelog item, just insert a new line
-					await vscode.commands.executeCommand("type", { text: "\n" });
+					const cursorPosition = editor.selection.active;
+
+					// Check if the current line starts with exactly one "-"
+					const currentLineText = document.lineAt(cursorPosition.line).text;
+					const trimmedLineText = currentLineText.trim();
+					if (
+						trimmedLineText.startsWith("-") &&
+						trimmedLineText.indexOf("-") === trimmedLineText.lastIndexOf("-")
+					) {
+						// Insert a "-" on the new line
+						await editor.edit((editBuilder) => {
+							editBuilder.insert(cursorPosition, "\n    - ");
+						});
+
+						// Move the cursor to the new line
+						const newPosition = new vscode.Position(cursorPosition.line + 1, 6);
+						editor.selection = new vscode.Selection(newPosition, newPosition);
+					} else {
+						// If not within a changelog item, just insert a new line
+						await vscode.commands.executeCommand("type", { text: "\n" });
+					}
 				}
+			} catch (error) {
+				console.error("Error in handleEnterKey command:", error);
+				// Fallback to inserting a normal newline if an error occurs
+				await vscode.commands.executeCommand("type", { text: "\n" });
 			}
 		},
 	);
