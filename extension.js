@@ -7,6 +7,9 @@ function activate(context) {
 	const editEmailAddress = vscode.commands.registerCommand(
 		"debian-changelog-item-creator.editEmailAddress",
 		async () => {
+			if (!isDebianChangelogFileActive()) {
+				return;
+			}
 			await promptForEmail();
 		},
 	);
@@ -14,6 +17,9 @@ function activate(context) {
 	const editName = vscode.commands.registerCommand(
 		"debian-changelog-item-creator.editName",
 		async () => {
+			if (!isDebianChangelogFileActive()) {
+				return;
+			}
 			await promptForName();
 		},
 	);
@@ -21,6 +27,9 @@ function activate(context) {
 	const newChangelogItem = vscode.commands.registerCommand(
 		"debian-changelog-item-creator.newChangelogItem",
 		async () => {
+			if (!isDebianChangelogFileActive()) {
+				return;
+			}
 			const config = vscode.workspace.getConfiguration(
 				"debian-changelog-item-creator",
 			);
@@ -180,6 +189,9 @@ function activate(context) {
 	const updateChangelogDate = vscode.commands.registerCommand(
 		"debian-changelog-item-creator.updateChangelogDate",
 		async () => {
+			if (!isDebianChangelogFileActive()) {
+				return;
+			}
 			const editor = vscode.window.activeTextEditor;
 			if (editor) {
 				const document = editor.document;
@@ -252,55 +264,58 @@ function activate(context) {
 		},
 	);
 
-	const handleEnterKey = vscode.commands.registerCommand(
-		"debian-changelog-item-creator.handleEnterKey",
-		async () => {
-			try {
-				const editor = vscode.window.activeTextEditor;
-				if (editor) {
-					const document = editor.document;
-
-					// Check if the file is a Debian changelog file
-					if (!document.fileName.endsWith("changelog")) {
-						await vscode.commands.executeCommand("type", { text: "\n" });
-						return;
-					}
-
-					const cursorPosition = editor.selection.active;
-
-					// Check if the current line starts with exactly one "-"
-					const currentLineText = document.lineAt(cursorPosition.line).text;
-					const trimmedLineText = currentLineText.trim();
-					if (
-						trimmedLineText.startsWith("-") &&
-						trimmedLineText.indexOf("-") === trimmedLineText.lastIndexOf("-")
-					) {
-						// Insert a "-" on the new line
-						await editor.edit((editBuilder) => {
-							editBuilder.insert(cursorPosition, "\n    - ");
-						});
-
-						// Move the cursor to the new line
-						const newPosition = new vscode.Position(cursorPosition.line + 1, 6);
-						editor.selection = new vscode.Selection(newPosition, newPosition);
-					} else {
-						// If not within a changelog item, just insert a new line
-						await vscode.commands.executeCommand("type", { text: "\n" });
-					}
-				}
-			} catch (error) {
-				console.error("Error in handleEnterKey command:", error);
-				// Fallback to inserting a normal newline if an error occurs
-				await vscode.commands.executeCommand("type", { text: "\n" });
-			}
-		},
-	);
-
 	context.subscriptions.push(newChangelogItem);
 	context.subscriptions.push(editEmailAddress);
 	context.subscriptions.push(editName);
 	context.subscriptions.push(updateChangelogDate);
-	context.subscriptions.push(handleEnterKey);
+
+	let isInsertingDash = false; // Flag to prevent re-triggering
+	let previousCursorPosition = null; // Track the previous cursor position
+
+	// Listen for selection changes to handle the Enter key behavior
+	vscode.window.onDidChangeTextEditorSelection((event) => {
+		if (!isDebianChangelogFileActive()) {
+			return;
+		}
+
+		const editor = event.textEditor;
+		const document = editor.document;
+		const cursorPosition = editor.selection.active;
+
+		if (
+			previousCursorPosition &&
+			cursorPosition.line !== previousCursorPosition.line &&
+			!isInsertingDash
+		) {
+			const previousLineText = document.lineAt(
+				previousCursorPosition.line,
+			).text;
+			const currentLineText = document.lineAt(cursorPosition.line).text;
+			const trimmedLineText = previousLineText.trim();
+
+			// Check if the previous line starts with "-" and the current line starts with 4 spaces or a tab
+			if (
+				trimmedLineText.startsWith("-") &&
+				(currentLineText.startsWith("    ") ||
+					currentLineText.startsWith("\t")) &&
+				!currentLineText.trim().startsWith("-") &&
+				currentLineText.trim() === "" // Ensure the current line is empty or only contains whitespace
+			) {
+				isInsertingDash = true; // Set the flag to prevent re-triggering
+
+				editor
+					.edit((editBuilder) => {
+						editBuilder.insert(cursorPosition, "- ");
+					})
+					.then(() => {
+						isInsertingDash = false; // Reset the flag after insertion
+					});
+			}
+		}
+
+		// Update the previous cursor position
+		previousCursorPosition = cursorPosition;
+	});
 
 	async function promptForName() {
 		// Prompt the user to enter their name
@@ -432,6 +447,15 @@ function activate(context) {
 		const timeZoneOffset = date.toString().match(/([+-][0-9]{4})/)[1];
 
 		return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${timeZoneOffset}`;
+	}
+
+	function isDebianChangelogFileActive() {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			return false;
+		}
+		const document = editor.document;
+		return document.fileName.endsWith("changelog");
 	}
 }
 

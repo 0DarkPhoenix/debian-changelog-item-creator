@@ -3,7 +3,7 @@
 	"displayName": "Debian Changelog Item Creator",
 	"description": "Add a generated Debian changelog item",
 	"publisher": "DarkPhoenix",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"engines": {
 		"vscode": "^1.89.0"
 	},
@@ -13,7 +13,7 @@
 		"type": "git",
 		"url": "https://github.com/0DarkPhoenix/debian-changelog-item-creator.git"
 	},
-	"activationEvents": [],
+	"activationEvents": ["onStartupFinished"],
 	"contributes": {
 		"commands": [
 			{
@@ -33,8 +33,8 @@
 				"title": "Debian Changelog Item Creator: Update Changelog Item Date"
 			},
 			{
-				"command": "debian-changelog-item-creator.handleEnterKey",
-				"title": ""
+				"command": "debian-changelog-item-creator.fixReleaseNumbers",
+				"title": "Debian Changelog Item Creator: Fix Release Numbers"
 			}
 		],
 		"configuration": {
@@ -65,8 +65,8 @@
 				"when": "editorTextFocus"
 			},
 			{
-				"command": "debian-changelog-item-creator.handleEnterKey",
-				"key": "enter",
+				"command": "debian-changelog-item-creator.fixReleaseNumbers",
+				"key": "ctrl+win+alt+f",
 				"when": "editorTextFocus"
 			}
 		]

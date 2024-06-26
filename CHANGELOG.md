@@ -1,3 +1,9 @@
+## [0.1.4] - 2024-06-25
+### Added
+- Extension now activates on startup instead of needing to trigger a command to activate it
+### Fixed
+- handleEnterKey command was interfering with other operations which used the Enter key
+
 ## [0.1.3] - 2024-06-24
 ### Fixed
 - Error "command 'debian-changelog-item-creator.handleEnterKey' not found" when using the enter key in certain situations inside and outside of the changelog file

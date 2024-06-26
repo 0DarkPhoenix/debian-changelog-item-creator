@@ -40,7 +40,7 @@ This extension contributes the following commands and their default shortcuts:
 - `debian-changelog-item-creator.editName`: Prompts you to enter and save your name.
 - `debian-changelog-item-creator.editEmailAddress`: Prompts you to enter and save your email address.
 - `debian-changelog-item-creator.newChangelogItem`: Creates a new changelog entry at the current cursor position.
-  - **Shortcut**: `Ctrl+Win+Alt+C` (Windows/Linux) or `Ctrl+Cmd+Alt+C` (Mac)
+  - **Shortcut**: `Ctrl+Win+Alt+C` (Windows/Linux) or `Ctrl+Option+Cmd+C` (Mac)
 - `debian-changelog-item-creator.updateChangelogDate`: Updates the datetime of the current cursor position.
   - **Shortcut**: `Ctrl+Win+Alt+I` (Windows/Linux) or `Ctrl+Option+Cmd+I` (Mac)
 
