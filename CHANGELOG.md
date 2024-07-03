@@ -1,3 +1,7 @@
+## [0.1.5] - 2024-07-03
+## Fixed
+- Pressing enter on a line with -- inserts a - on the line below
+
 ## [0.1.4] - 2024-06-25
 ### Added
 - Extension now activates on startup instead of needing to trigger a command to activate it

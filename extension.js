@@ -293,9 +293,10 @@ function activate(context) {
 			const currentLineText = document.lineAt(cursorPosition.line).text;
 			const trimmedLineText = previousLineText.trim();
 
-			// Check if the previous line starts with "-" and the current line starts with 4 spaces or a tab
+			// Check if the previous line starts with "-" (but not "--") and the current line starts with 4 spaces or a tab
 			if (
 				trimmedLineText.startsWith("-") &&
+				!trimmedLineText.startsWith("--") &&
 				(currentLineText.startsWith("    ") ||
 					currentLineText.startsWith("\t")) &&
 				!currentLineText.trim().startsWith("-") &&
