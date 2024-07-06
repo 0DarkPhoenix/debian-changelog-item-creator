@@ -30,9 +30,7 @@ function activate(context) {
 			if (!isDebianChangelogFileActive()) {
 				return;
 			}
-			const config = vscode.workspace.getConfiguration(
-				"debian-changelog-item-creator",
-			);
+			const config = vscode.workspace.getConfiguration("debian-changelog-item-creator");
 			let name = config.get("name");
 			let email = config.get("emailAddress");
 
@@ -45,9 +43,7 @@ function activate(context) {
 			}
 
 			if (!name || !email) {
-				vscode.window.showErrorMessage(
-					"Debian Changelog Item Creator: Name or Email is not set.",
-				);
+				vscode.window.showErrorMessage("Debian Changelog Item Creator: Name or Email is not set.");
 				return;
 			}
 
@@ -61,8 +57,7 @@ function activate(context) {
 					return;
 				}
 
-				const { title, version, distribution } =
-					parseChangelogLine(changelogLine);
+				const { title, version, distribution } = parseChangelogLine(changelogLine);
 				const newVersion = bumpVersion(version);
 				let changelogMessage = "";
 
@@ -83,12 +78,7 @@ function activate(context) {
 						// Remove the line text
 						await editor.edit((editBuilder) => {
 							editBuilder.delete(
-								new vscode.Range(
-									cursorPosition.line,
-									0,
-									cursorPosition.line,
-									lineText.length,
-								),
+								new vscode.Range(cursorPosition.line, 0, cursorPosition.line, lineText.length),
 							);
 						});
 					}
@@ -150,10 +140,7 @@ function activate(context) {
 				await editor
 					.edit((editBuilder) => {
 						// Check and add newline at the top
-						if (
-							startLine > 0 &&
-							editor.document.lineAt(startLine - 1).text.trim() !== ""
-						) {
+						if (startLine > 0 && editor.document.lineAt(startLine - 1).text.trim() !== "") {
 							editBuilder.insert(new vscode.Position(startLine, 0), "\n");
 							startLine++;
 						}
@@ -201,9 +188,7 @@ function activate(context) {
 				let startLine = cursorPosition.line;
 				while (
 					startLine >= 0 &&
-					!document
-						.lineAt(startLine)
-						.text.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)
+					!document.lineAt(startLine).text.match(/^(.*?) \((.*?)\) (.*?); urgency=low$/)
 				) {
 					startLine--;
 				}
@@ -253,9 +238,7 @@ function activate(context) {
 					editBuilder.replace(range, newLineText);
 				});
 
-				vscode.window.showInformationMessage(
-					"Changelog date updated successfully!",
-				);
+				vscode.window.showInformationMessage("Changelog date updated successfully!");
 			} else {
 				vscode.window.showErrorMessage(
 					"Debian Changelog Item Creator: No active text editor found.",
@@ -287,9 +270,7 @@ function activate(context) {
 			cursorPosition.line !== previousCursorPosition.line &&
 			!isInsertingDash
 		) {
-			const previousLineText = document.lineAt(
-				previousCursorPosition.line,
-			).text;
+			const previousLineText = document.lineAt(previousCursorPosition.line).text;
 			const currentLineText = document.lineAt(cursorPosition.line).text;
 			const trimmedLineText = previousLineText.trim();
 
@@ -297,8 +278,7 @@ function activate(context) {
 			if (
 				trimmedLineText.startsWith("-") &&
 				!trimmedLineText.startsWith("--") &&
-				(currentLineText.startsWith("    ") ||
-					currentLineText.startsWith("\t")) &&
+				(currentLineText.startsWith("    ") || currentLineText.startsWith("\t")) &&
 				!currentLineText.trim().startsWith("-") &&
 				currentLineText.trim() === "" // Ensure the current line is empty or only contains whitespace
 			) {
@@ -324,22 +304,14 @@ function activate(context) {
 			placeHolder: "Enter your name (Firstname Lastname)",
 			prompt: "Please enter your name (Firstname Lastname)",
 			validateInput: (text) => {
-				return text.trim() === ""
-					? "Name cannot be empty or contain only spaces"
-					: null;
+				return text.trim() === "" ? "Name cannot be empty or contain only spaces" : null;
 			},
 		});
 
 		if (name && name.trim() !== "") {
 			// Save the name in the global settings under debian-changelog-item-creator namespace
-			const config = vscode.workspace.getConfiguration(
-				"debian-changelog-item-creator",
-			);
-			await config.update(
-				"name",
-				name.trim(),
-				vscode.ConfigurationTarget.Global,
-			);
+			const config = vscode.workspace.getConfiguration("debian-changelog-item-creator");
+			await config.update("name", name.trim(), vscode.ConfigurationTarget.Global);
 
 			vscode.window.showInformationMessage("Name saved successfully!");
 		} else {
@@ -355,22 +327,14 @@ function activate(context) {
 			prompt: "Please enter your email address",
 			validateInput: (text) => {
 				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-				return emailRegex.test(text)
-					? null
-					: "Please enter a valid email address";
+				return emailRegex.test(text) ? null : "Please enter a valid email address";
 			},
 		});
 
 		if (email) {
 			// Save the email address in the global settings under debian-changelog-item-creator namespace
-			const config = vscode.workspace.getConfiguration(
-				"debian-changelog-item-creator",
-			);
-			await config.update(
-				"emailAddress",
-				email,
-				vscode.ConfigurationTarget.Global,
-			);
+			const config = vscode.workspace.getConfiguration("debian-changelog-item-creator");
+			await config.update("emailAddress", email, vscode.ConfigurationTarget.Global);
 
 			vscode.window.showInformationMessage("Email address saved successfully!");
 		} else {
