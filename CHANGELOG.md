@@ -1,3 +1,9 @@
+## [0.1.6] - 2024-09-08
+### Added
+- Changelog text with multiple indentation levels are now supported by pressing Tab when on a line with only a -
+### Fixed
+- Placing your cursor below the Release line, adding a tab and a space and spamming left mouse click would insert a -
+
 ## [0.1.5] - 2024-07-03
 ## Fixed
 - Pressing enter on a line with -- inserts a - on the line below

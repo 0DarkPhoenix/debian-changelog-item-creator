@@ -43,7 +43,9 @@ function activate(context) {
 			}
 
 			if (!name || !email) {
-				vscode.window.showErrorMessage("Debian Changelog Item Creator: Name or Email is not set.");
+				vscode.window.showErrorMessage(
+					"Debian Changelog Item Creator: Name or Email is not set.",
+				);
 				return;
 			}
 
@@ -78,7 +80,12 @@ function activate(context) {
 						// Remove the line text
 						await editor.edit((editBuilder) => {
 							editBuilder.delete(
-								new vscode.Range(cursorPosition.line, 0, cursorPosition.line, lineText.length),
+								new vscode.Range(
+									cursorPosition.line,
+									0,
+									cursorPosition.line,
+									lineText.length,
+								),
 							);
 						});
 					}
@@ -140,7 +147,10 @@ function activate(context) {
 				await editor
 					.edit((editBuilder) => {
 						// Check and add newline at the top
-						if (startLine > 0 && editor.document.lineAt(startLine - 1).text.trim() !== "") {
+						if (
+							startLine > 0 &&
+							editor.document.lineAt(startLine - 1).text.trim() !== ""
+						) {
 							editBuilder.insert(new vscode.Position(startLine, 0), "\n");
 							startLine++;
 						}
@@ -201,8 +211,7 @@ function activate(context) {
 				) {
 					endLine++;
 				}
-				console.log("startLine:", startLine);
-				console.log("endLine:", endLine);
+
 				if (startLine < 0 || endLine >= document.lineCount) {
 					vscode.window.showErrorMessage(
 						"Debian Changelog Item Creator: Could not find the changelog item boundaries.",
@@ -278,6 +287,7 @@ function activate(context) {
 			if (
 				trimmedLineText.startsWith("-") &&
 				!trimmedLineText.startsWith("--") &&
+				!trimmedLineText.startsWith("*") &&
 				(currentLineText.startsWith("    ") || currentLineText.startsWith("\t")) &&
 				!currentLineText.trim().startsWith("-") &&
 				currentLineText.trim() === "" // Ensure the current line is empty or only contains whitespace
@@ -296,6 +306,51 @@ function activate(context) {
 
 		// Update the previous cursor position
 		previousCursorPosition = cursorPosition;
+	});
+
+	// Listen for text changes to handle the Tab key behavior
+	vscode.workspace.onDidChangeTextDocument((event) => {
+		// console.log("onDidChangeTextDocument triggered");
+		if (!isDebianChangelogFileActive()) {
+			// console.log("Not a Debian changelog file");
+			return;
+		}
+
+		const editor = vscode.window.activeTextEditor;
+		if (!editor || event.document !== editor.document) {
+			// console.log("No active editor or wrong document");
+			return;
+		}
+
+		const changes = event.contentChanges;
+		// console.log("Changes:", JSON.stringify(changes));
+		if (changes.length === 1) {
+			const cursorPosition = editor.selection.active;
+			const lineText = editor.document.lineAt(cursorPosition.line).text;
+			// console.log("Current line text:", lineText);
+
+			if (changes[0].text === "\t" || /^ {2,3}$/.test(changes[0].text)) {
+				// console.log("Tab key pressed");
+				const leadingWhitespace = lineText.match(/^\s*/)[0];
+				// console.log("Leading whitespace:", leadingWhitespace);
+				editor.edit((editBuilder) => {
+					// console.log("Editing document");
+					editBuilder.delete(
+						new vscode.Range(
+							cursorPosition.line,
+							0,
+							cursorPosition.line,
+							lineText.length,
+						),
+					);
+					const newText = lineText.trimLeft().startsWith("- ")
+						? `    ${leadingWhitespace}- ${lineText.trim().substring(2)}`
+						: `    ${leadingWhitespace}${lineText.trim()}`;
+					// console.log("New text to insert:", newText);
+					editBuilder.insert(new vscode.Position(cursorPosition.line, 0), newText);
+				});
+			}
+		}
 	});
 
 	async function promptForName() {
