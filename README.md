@@ -2,7 +2,8 @@
 
 ## Overview
 
-The "Debian Changelog Item Creator" extension for Visual Studio Code helps you easily create and manage changelog entries for Debian packages. This extension streamlines the process of adding new changelog items, ensuring they are formatted correctly and include necessary metadata such as version, urgency, and author details.
+The "Debian Changelog Item Creator" extension for Visual Studio Code helps you easily create and manage changelog entries for Debian packages according to its [format description](https://manpages.debian.org/testing/dpkg-dev/deb-changelog.5.en.html).  
+This extension streamlines the process of adding new changelog items, ensuring they are formatted correctly and include necessary metadata such as version, urgency, and author details.
 
 ## Features
 
